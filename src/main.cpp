@@ -5,6 +5,7 @@
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl2.h"
+#include "imnodes.h"
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -54,6 +55,7 @@ int main(int argc, char** argv)
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImNodes::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
@@ -96,9 +98,20 @@ int main(int argc, char** argv)
         ImGui::NewFrame();
 
         {
-            ImGui::Begin("Static Analysis Visualizer");
-            ImGui::Text("Hello world");
-            ImGui::End();
+            ImNodes::BeginNodeEditor();
+            ImNodes::BeginNode(1);
+            ImGui::Text("p = &q;");
+            ImNodes::BeginOutputAttribute(1);
+            ImGui::Text("Out");
+            ImNodes::EndOutputAttribute();
+            ImNodes::EndNode();
+
+            ImNodes::BeginNode(2);
+            ImGui::Text("q = &r;");
+            ImNodes::EndNode();
+
+            ImNodes::MiniMap();
+            ImNodes::EndNodeEditor();
         }
 
         ImGui::Render();
@@ -112,6 +125,7 @@ int main(int argc, char** argv)
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+    ImNodes::DestroyContext();
     ImGui::DestroyContext();
 
     SDL_GL_DeleteContext(gl_context);
