@@ -6,6 +6,7 @@
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl2.h"
 #include "imnodes.h"
+#include "trace.h"
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -13,13 +14,15 @@
 #include <windows.h>
 #endif
 
+using namespace sail;
+
 int main(int argc, char** argv)
 {
     if (argc != 2) {
         printf("Specify tracefile\n");
         exit(0);
     }
-    printf("Reading tracefile : %s\n", argv[1]);
+    Trace tracefile(argv[1]);
 
 #ifdef _WIN32
     ::SetProcessDPIAware();
