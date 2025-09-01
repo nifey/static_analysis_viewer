@@ -552,10 +552,10 @@ ImVec2 GetScreenSpacePinCoordinates(
     const ImNodesAttributeType type)
 {
     IM_ASSERT(type == ImNodesAttributeType_Input || type == ImNodesAttributeType_Output);
-    const float x = type == ImNodesAttributeType_Input
-                        ? (node_rect.Min.x - GImNodes->Style.PinOffset)
-                        : (node_rect.Max.x + GImNodes->Style.PinOffset);
-    return ImVec2(x, 0.5f * (attribute_rect.Min.y + attribute_rect.Max.y));
+    const float y = type == ImNodesAttributeType_Input
+                        ? (node_rect.Min.y - GImNodes->Style.PinOffset)
+                        : (node_rect.Max.y + GImNodes->Style.PinOffset);
+    return ImVec2(0.5f * (node_rect.Min.x + node_rect.Max.x), y);
 }
 
 ImVec2 GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
