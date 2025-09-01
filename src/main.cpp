@@ -100,22 +100,7 @@ int main(int argc, char** argv)
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        {
-            ImNodes::BeginNodeEditor();
-            ImNodes::BeginNode(1);
-            ImGui::Text("p = &q;");
-            ImNodes::BeginOutputAttribute(1);
-            ImGui::Text("Out");
-            ImNodes::EndOutputAttribute();
-            ImNodes::EndNode();
-
-            ImNodes::BeginNode(2);
-            ImGui::Text("q = &r;");
-            ImNodes::EndNode();
-
-            ImNodes::MiniMap();
-            ImNodes::EndNodeEditor();
-        }
+        tracefile.render();
 
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);

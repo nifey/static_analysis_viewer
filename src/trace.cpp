@@ -2,6 +2,7 @@
  * Trace file parsing, traversal and rendering
  */
 #include "trace.h"
+#include "imnodes.h"
 #include <iostream>
 #include <fstream>
 
@@ -92,6 +93,49 @@ namespace sail {
         return nodeContents[nodeID];
     }
 
+    vector<NodeID> Graph::getActiveNodeIDs() {
+        // FIXME After implementing events, select only the nodes of the currently active group
+        vector<NodeID> activeNodes;
+        for (NodeID i = 0; i < nodeNames.size(); i++)
+            activeNodes.push_back(i);
+        return activeNodes;
+    }
+
+    vector<pair<NodeID, NodeID>> Graph::getActiveEdges() {
+        // FIXME After implementing events, select only the edges of the currently active group
+        vector<pair<NodeID,NodeID>> activeEdges;
+        for (auto entry : edges) {
+            NodeID srcNodeID = entry.first;
+            for (NodeID dstNodeID : entry.second)
+                activeEdges.push_back(make_pair(srcNodeID, dstNodeID));
+        }
+        return activeEdges;
+    }
+
+    void Graph::renderGraphView() {
+        static AttributeID attrID = 0;
+        ImNodes::BeginNodeEditor();
+        for (NodeID nodeID : getActiveNodeIDs()) {
+            ImNodes::BeginNode(nodeID);
+            ImGui::Text(getNodeContents(nodeID).c_str());
+            ImNodes::BeginInputAttribute(attrID);
+            ImNodes::EndInputAttribute();
+            inputAttributeIDMap[nodeID] = attrID++;
+            ImNodes::BeginOutputAttribute(attrID);
+            ImNodes::EndOutputAttribute();
+            outputAttributeIDMap[nodeID] = attrID++;
+            ImNodes::EndNode();
+        }
+
+        EdgeID edgeID = 0;
+        for (auto edge : getActiveEdges())
+            ImNodes::Link(edgeID++,
+                    outputAttributeIDMap[edge.first],
+                    inputAttributeIDMap[edge.second]);
+        ImNodes::MiniMap();
+        ImNodes::EndNodeEditor();
+    }
+
     void Trace::processInstruction(string currentInstruction) {
         auto splitInstruction = splitOnFirst(currentInstruction, "\n");
         string instructionHeader = splitInstruction.first;
@@ -142,6 +186,10 @@ namespace sail {
             currentInstruction = line;
         }
         processInstruction(currentInstruction);
+    }
+
+    void Trace::render() {
+        this->graph.renderGraphView();
     }
 
 }
