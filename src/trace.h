@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include <string>
+#include <SDL.h>
 
 using namespace std;
 
@@ -45,12 +46,62 @@ namespace sail {
             void renderGraphView();
     };
 
+    enum EVENT_TYPE {
+        NODE_INFO,
+        EDGE_INFO,
+        GLOBAL_INFO,
+    };
+
+    class Event {
+        private:
+            EVENT_TYPE type;
+            string tag, info;
+
+            // Depending on the type of event, we will use zero (global),
+            // one (node) or two(edge) Node IDs below
+            NodeID node1, node2;
+
+        public:
+            Event (EVENT_TYPE type, string info, string tag) 
+                : type(type), info(info), tag(tag) {};
+            void setNode(NodeID nodeID) { node1 = nodeID; }
+            void setEdge(NodeID srcNodeID, NodeID dstNodeID) {
+                node1 = srcNodeID; node2 = dstNodeID;
+            }
+
+            // Other getters
+            EVENT_TYPE getType() { return type; }
+            string getTag() { return tag; }
+            string getInfo() { return info; }
+    };
+
+    class Timeline {
+        private:
+            vector<Event> eventList;
+            unsigned long long currentTimelineIndex = 0;
+
+        public:
+            void addEvent(Event event)  { eventList.push_back(event); }
+            unsigned long long size()   { return eventList.size(); }
+            Event& getCurrentEvent()    { return eventList[currentTimelineIndex]; }
+            void moveToNextEvent() {
+                if (currentTimelineIndex < eventList.size() - 1)
+                    currentTimelineIndex++;
+            }
+            void moveToPrevEvent() {
+                if (currentTimelineIndex > 0)
+                    currentTimelineIndex--;
+            }
+    };
+
     class Trace {
         private:
             // Filename of the trace
             string filename;
             // Graph representation
             Graph graph;
+            // Timeline
+            Timeline timeline;
             
             void processInstruction(string currentInstruction);
 
@@ -61,6 +112,7 @@ namespace sail {
 
             // Main Render function
             void render();
+            void renderInfoView();
     };
 
 }

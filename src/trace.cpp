@@ -159,6 +159,20 @@ namespace sail {
                 exit(0);
             }
             this->graph.addEdge(headerTokens[1], headerTokens[2]);
+        } else if (instruction == ">>nodeinfo") {
+            string tag = splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second;
+            Event event(EVENT_TYPE::NODE_INFO, instructionBody, tag);
+            event.setNode(graph.getNodeID(headerTokens[1]));
+            timeline.addEvent(event);
+        } else if (instruction == ">>edgeinfo") {
+            string tag = splitOnFirst(splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second, " \t").second;
+            Event event(EVENT_TYPE::EDGE_INFO, instructionBody, tag);
+            event.setEdge(graph.getNodeID(headerTokens[1]), graph.getNodeID(headerTokens[2]));
+            timeline.addEvent(event);
+        } else if (instruction == ">>globalinfo") {
+            string tag = splitOnFirst(instructionHeader, " \t").second;
+            Event event(EVENT_TYPE::GLOBAL_INFO, instructionBody, tag);
+            timeline.addEvent(event);
         } else {
             cout << "Unknown instruction " << instruction << " found in " << instructionHeader << "\n";
             exit(0);
@@ -188,8 +202,25 @@ namespace sail {
         processInstruction(currentInstruction);
     }
 
-    void Trace::render() {
-        this->graph.renderGraphView();
+    void Trace::renderInfoView() { 
+        ImGui::Begin("Info View");
+        if (timeline.size() != 0) {
+            Event &currentEvent = timeline.getCurrentEvent();
+            ImGui::Text(currentEvent.getTag().c_str());
+            ImGui::Text(currentEvent.getInfo().c_str());
+        }
+        ImGui::End();
     }
 
+    void Trace::render() {
+        if (ImGui::IsKeyPressed(ImGuiKey_L, true) ||
+                ImGui::IsKeyPressed(ImGuiKey_RightArrow, true))
+            timeline.moveToNextEvent();
+        if (ImGui::IsKeyPressed(ImGuiKey_H, true) ||
+                ImGui::IsKeyPressed(ImGuiKey_LeftArrow, true))
+            timeline.moveToPrevEvent();
+
+        this->graph.renderGraphView();
+        renderInfoView();
+    }
 }
