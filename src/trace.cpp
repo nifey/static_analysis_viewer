@@ -5,6 +5,7 @@
 #include "imnodes.h"
 #include <iostream>
 #include <fstream>
+#include <gvc.h>
 
 using namespace std;
 
@@ -112,7 +113,35 @@ namespace sail {
         return activeEdges;
     }
 
+    bool layoutGraph = true;
     void Graph::renderGraphView() {
+        if (layoutGraph) {
+            GVC_t* gvc = gvContext();
+            Agraph_t* G = agopen("graph", Agdirected, nullptr);
+
+            // Construct the Agraph from our graph representation
+            map<NodeID, Agnode_t*> nodeMap;
+            map<pair<NodeID,NodeID>, Agedge_t*> edgeMap;
+            for (NodeID nodeID : getActiveNodeIDs())
+                nodeMap[nodeID] = agnode(G, nullptr, true);
+            for (auto edge : getActiveEdges())
+                edgeMap[edge] = agedge(G, nodeMap[edge.first], nodeMap[edge.second], nullptr, true);
+
+            // Use GraphViz layout to layout the graph
+            gvLayout(gvc, G, "dot");
+            for (NodeID nodeID : getActiveNodeIDs()) {
+                auto pos = ND_coord(nodeMap[nodeID]);
+                ImNodes::SetNodeGridSpacePos(nodeID, ImVec2(pos.x, 100 - pos.y));
+                ImNodes::SetNodeDraggable(nodeID, true);
+            }
+
+            // Cleanup layout
+            gvFreeLayout(gvc, G);
+            agclose(G);
+            gvFreeContext(gvc);
+            layoutGraph = false;
+        }
+
         static AttributeID attrID = 0;
         ImNodes::BeginNodeEditor();
         for (NodeID nodeID : getActiveNodeIDs()) {

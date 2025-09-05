@@ -27,9 +27,9 @@ SOURCES += $(IMNODES_DIR)/imnodes.cpp
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(IMNODES_DIR)
+CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(IMNODES_DIR) -I/usr/include/graphviz
 CXXFLAGS += -g -Wall -Wformat
-LIBS =
+LIBS = -lcgraph -lgvc
 
 ##---------------------------------------------------------------------
 ## BUILD FLAGS PER PLATFORM

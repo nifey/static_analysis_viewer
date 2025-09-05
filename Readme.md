@@ -7,7 +7,7 @@ git submodule update --init
 
 # Install Dependencies
 # On Linux
-apt-get install libsdl2-dev libopengl-dev
+apt-get install libsdl2-dev libopengl-dev libgraphviz-dev
 # On Mac
 brew install sdl2
 
