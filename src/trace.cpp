@@ -115,9 +115,31 @@ namespace sail {
 
     bool layoutGraph = true;
     void Graph::renderGraphView() {
+        static AttributeID attrID = 0;
+        ImNodes::BeginNodeEditor();
+        for (NodeID nodeID : getActiveNodeIDs()) {
+            ImNodes::BeginNode(nodeID);
+            ImGui::Text(getNodeContents(nodeID).c_str());
+            if (inputAttributeIDMap.find(nodeID) == inputAttributeIDMap.end())
+                inputAttributeIDMap[nodeID] = attrID++;
+            if (outputAttributeIDMap.find(nodeID) == outputAttributeIDMap.end())
+                outputAttributeIDMap[nodeID] = attrID++;
+            ImNodes::BeginInputAttribute(inputAttributeIDMap[nodeID]);
+            ImNodes::EndInputAttribute();
+            ImNodes::BeginOutputAttribute(outputAttributeIDMap[nodeID]);
+            ImNodes::EndOutputAttribute();
+            ImNodes::EndNode();
+        }
+
         if (layoutGraph) {
             GVC_t* gvc = gvContext();
             Agraph_t* G = agopen("graph", Agdirected, nullptr);
+            agattr(G, AGNODE, "width", "1");
+            agattr(G, AGNODE, "height", "1");
+            agattr(G, AGNODE, "shape", "box");
+            agattr(G, AGNODE, "fixedsize", "true");
+            agset(G, "dpi", "72");
+            const double dpi = 72.0;
 
             // Construct the Agraph from our graph representation
             map<NodeID, Agnode_t*> nodeMap;
@@ -126,12 +148,20 @@ namespace sail {
                 nodeMap[nodeID] = agnode(G, nullptr, true);
             for (auto edge : getActiveEdges())
                 edgeMap[edge] = agedge(G, nodeMap[edge.first], nodeMap[edge.second], nullptr, true);
+            for (NodeID nodeID : getActiveNodeIDs()) {
+                auto dimensions = ImNodes::GetNodeDimensions(nodeID);
+                agset(nodeMap[nodeID], "width", const_cast<char*>(to_string(dimensions[0]/dpi).c_str()));
+                agset(nodeMap[nodeID], "height", const_cast<char*>(to_string(dimensions[1]/dpi).c_str()));
+            }
 
             // Use GraphViz layout to layout the graph
             gvLayout(gvc, G, "dot");
             for (NodeID nodeID : getActiveNodeIDs()) {
-                auto pos = ND_coord(nodeMap[nodeID]);
-                ImNodes::SetNodeGridSpacePos(nodeID, ImVec2(pos.x, 100 - pos.y));
+                Agnode_t *anode = nodeMap[nodeID];
+                auto pos = ND_coord(anode);
+                auto width = ND_width(anode) * dpi;
+                auto height = ND_height(anode) * dpi;
+                ImNodes::SetNodeGridSpacePos(nodeID, ImVec2(pos.x + width, - height - pos.y));
                 ImNodes::SetNodeDraggable(nodeID, true);
             }
 
@@ -142,26 +172,12 @@ namespace sail {
             layoutGraph = false;
         }
 
-        static AttributeID attrID = 0;
-        ImNodes::BeginNodeEditor();
-        for (NodeID nodeID : getActiveNodeIDs()) {
-            ImNodes::BeginNode(nodeID);
-            ImGui::Text(getNodeContents(nodeID).c_str());
-            ImNodes::BeginInputAttribute(attrID);
-            ImNodes::EndInputAttribute();
-            inputAttributeIDMap[nodeID] = attrID++;
-            ImNodes::BeginOutputAttribute(attrID);
-            ImNodes::EndOutputAttribute();
-            outputAttributeIDMap[nodeID] = attrID++;
-            ImNodes::EndNode();
-        }
-
         EdgeID edgeID = 0;
         for (auto edge : getActiveEdges())
             ImNodes::Link(edgeID++,
                     outputAttributeIDMap[edge.first],
                     inputAttributeIDMap[edge.second]);
-        ImNodes::MiniMap();
+        ImNodes::MiniMap(0.3f, ImNodesMiniMapLocation_BottomRight);
         ImNodes::EndNodeEditor();
     }
 
