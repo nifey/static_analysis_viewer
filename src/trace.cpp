@@ -86,38 +86,38 @@ namespace sail {
         return nodeIDs[groupName][subNodeName];
     }
 
-    std::string Graph::getNodeName(NodeID nodeID) {
+    string Graph::getNodeName(NodeID nodeID) {
         return nodeNames[nodeID];
     }
 
-    std::string Graph::getNodeContents(NodeID nodeID) {
+    string Graph::getNodeGroupName(NodeID nodeID) {
+        auto splitName = splitOnFirst(nodeNames[nodeID], ":");
+        return splitName.first;
+    }
+
+    string Graph::getNodeContents(NodeID nodeID) {
         return nodeContents[nodeID];
     }
 
-    vector<NodeID> Graph::getActiveNodeIDs() {
-        // FIXME After implementing events, select only the nodes of the currently active group
+    vector<NodeID> Graph::getActiveNodeIDs(string currentGroup) {
         vector<NodeID> activeNodes;
-        for (NodeID i = 0; i < nodeNames.size(); i++)
-            activeNodes.push_back(i);
+        for (auto entry: nodeIDs[currentGroup])
+            activeNodes.push_back(entry.second);
         return activeNodes;
     }
 
-    vector<pair<NodeID, NodeID>> Graph::getActiveEdges() {
-        // FIXME After implementing events, select only the edges of the currently active group
+    vector<pair<NodeID, NodeID>> Graph::getActiveEdges(string currentGroup) {
         vector<pair<NodeID,NodeID>> activeEdges;
-        for (auto entry : edges) {
-            NodeID srcNodeID = entry.first;
-            for (NodeID dstNodeID : entry.second)
-                activeEdges.push_back(make_pair(srcNodeID, dstNodeID));
-        }
+        for (auto entry: nodeIDs[currentGroup])
+            for (NodeID dstNodeID : edges[entry.second])
+                activeEdges.push_back(make_pair(entry.second, dstNodeID));
         return activeEdges;
     }
 
-    bool layoutGraph = true;
-    void Graph::renderGraphView() {
+    void Graph::renderGraphView(string currentGroup) {
         static AttributeID attrID = 0;
         ImNodes::BeginNodeEditor();
-        for (NodeID nodeID : getActiveNodeIDs()) {
+        for (NodeID nodeID : getActiveNodeIDs(currentGroup)) {
             ImNodes::BeginNode(nodeID);
             ImGui::Text(getNodeContents(nodeID).c_str());
             if (inputAttributeIDMap.find(nodeID) == inputAttributeIDMap.end())
@@ -131,7 +131,9 @@ namespace sail {
             ImNodes::EndNode();
         }
 
-        if (layoutGraph) {
+        if (lastDisplayedGroup != currentGroup) {
+            lastDisplayedGroup = currentGroup;
+
             GVC_t* gvc = gvContext();
             Agraph_t* G = agopen("graph", Agdirected, nullptr);
             agattr(G, AGNODE, "width", "1");
@@ -144,11 +146,11 @@ namespace sail {
             // Construct the Agraph from our graph representation
             map<NodeID, Agnode_t*> nodeMap;
             map<pair<NodeID,NodeID>, Agedge_t*> edgeMap;
-            for (NodeID nodeID : getActiveNodeIDs())
+            for (NodeID nodeID : getActiveNodeIDs(currentGroup))
                 nodeMap[nodeID] = agnode(G, nullptr, true);
-            for (auto edge : getActiveEdges())
+            for (auto edge : getActiveEdges(currentGroup))
                 edgeMap[edge] = agedge(G, nodeMap[edge.first], nodeMap[edge.second], nullptr, true);
-            for (NodeID nodeID : getActiveNodeIDs()) {
+            for (NodeID nodeID : getActiveNodeIDs(currentGroup)) {
                 auto dimensions = ImNodes::GetNodeDimensions(nodeID);
                 agset(nodeMap[nodeID], "width", const_cast<char*>(to_string(dimensions[0]/dpi).c_str()));
                 agset(nodeMap[nodeID], "height", const_cast<char*>(to_string(dimensions[1]/dpi).c_str()));
@@ -156,7 +158,7 @@ namespace sail {
 
             // Use GraphViz layout to layout the graph
             gvLayout(gvc, G, "dot");
-            for (NodeID nodeID : getActiveNodeIDs()) {
+            for (NodeID nodeID : getActiveNodeIDs(currentGroup)) {
                 Agnode_t *anode = nodeMap[nodeID];
                 auto pos = ND_coord(anode);
                 auto width = ND_width(anode) * dpi;
@@ -169,11 +171,10 @@ namespace sail {
             gvFreeLayout(gvc, G);
             agclose(G);
             gvFreeContext(gvc);
-            layoutGraph = false;
         }
 
         EdgeID edgeID = 0;
-        for (auto edge : getActiveEdges())
+        for (auto edge : getActiveEdges(currentGroup))
             ImNodes::Link(edgeID++,
                     outputAttributeIDMap[edge.first],
                     inputAttributeIDMap[edge.second]);
@@ -265,7 +266,7 @@ namespace sail {
                 ImGui::IsKeyPressed(ImGuiKey_LeftArrow, true))
             timeline.moveToPrevEvent();
 
-        this->graph.renderGraphView();
+        graph.renderGraphView(timeline.getCurrentGroup(graph));
         renderInfoView();
     }
 }

@@ -32,18 +32,22 @@ namespace sail {
             map<NodeID, AttributeID> inputAttributeIDMap;
             map<NodeID, AttributeID> outputAttributeIDMap;
 
+            // Last displayed group : Used to figure out when to call GraphViz for layout
+            string lastDisplayedGroup = "-------";
+
         public:
             void addNode(string nodeName, std::string nodeContents); 
             void addEdge(string srcNodeName, string dstNodeName); 
             NodeID getNodeID(string nodeName);
             std::string getNodeName(NodeID nodeID);
+            std::string getNodeGroupName(NodeID nodeID);
             std::string getNodeContents(NodeID nodeID);
 
-            vector<NodeID> getActiveNodeIDs();
-            vector<pair<NodeID, NodeID>> getActiveEdges();
+            vector<NodeID> getActiveNodeIDs(string currentGroup);
+            vector<pair<NodeID, NodeID>> getActiveEdges(string currentGroup);
 
             // Render the active nodes in the NodeEditor
-            void renderGraphView();
+            void renderGraphView(string currentGroup);
     };
 
     enum EVENT_TYPE {
@@ -73,6 +77,8 @@ namespace sail {
             EVENT_TYPE getType() { return type; }
             string getTag() { return tag; }
             string getInfo() { return info; }
+            NodeID getNode1() { return node1; }
+            NodeID getNode2() { return node2; }
     };
 
     class Timeline {
@@ -91,6 +97,16 @@ namespace sail {
             void moveToPrevEvent() {
                 if (currentTimelineIndex > 0)
                     currentTimelineIndex--;
+            }
+            string getCurrentGroup(Graph &graph) {
+                unsigned long long lastGraphEventIndex = currentTimelineIndex;
+                if (eventList.size() == 0) return "";
+                while (lastGraphEventIndex > 0 && eventList[lastGraphEventIndex].getType() == GLOBAL_INFO)
+                    lastGraphEventIndex--;
+                if (eventList[lastGraphEventIndex].getType() == GLOBAL_INFO)
+                    return "";
+                NodeID lastActiveNode = eventList[lastGraphEventIndex].getNode1();
+                return graph.getNodeGroupName(lastActiveNode);
             }
     };
 
