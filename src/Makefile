@@ -19,17 +19,29 @@ SOURCES = main.cpp trace.cpp
 
 IMGUI_DIR = ../lib/imgui
 SOURCES += $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_demo.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp
-SOURCES += $(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl2.cpp
+SOURCES += $(IMGUI_DIR)/backends/imgui_impl_sdl2.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 
 IMNODES_DIR = ../lib/imnodes
 SOURCES += $(IMNODES_DIR)/imnodes.cpp
 
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
+LINUX_GL_LIBS = -lGL
 
 CXXFLAGS = -std=c++11 -I$(IMGUI_DIR) -I$(IMGUI_DIR)/backends -I$(IMNODES_DIR) -I/usr/include/graphviz
 CXXFLAGS += -g -Wall -Wformat
 LIBS = -lcgraph -lgvc
+
+##---------------------------------------------------------------------
+## OPENGL ES
+##---------------------------------------------------------------------
+
+## This assumes a GL ES library available in the system, e.g. libGLESv2.so
+# CXXFLAGS += -DIMGUI_IMPL_OPENGL_ES2
+# LINUX_GL_LIBS = -lGLESv2
+## If you're on a Raspberry Pi and want to use the legacy drivers,
+## use the following instead:
+# LINUX_GL_LIBS = -L/opt/vc/lib -lbrcmGLESv2
 
 ##---------------------------------------------------------------------
 ## BUILD FLAGS PER PLATFORM
@@ -37,7 +49,7 @@ LIBS = -lcgraph -lgvc
 
 ifeq ($(UNAME_S), Linux) #LINUX
 	ECHO_MESSAGE = "Linux"
-	LIBS += -lGL -ldl `sdl2-config --libs`
+	LIBS += $(LINUX_GL_LIBS) -ldl `sdl2-config --libs`
 
 	CXXFLAGS += `sdl2-config --cflags`
 	CFLAGS = $(CXXFLAGS)
