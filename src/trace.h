@@ -132,7 +132,6 @@ namespace sail {
 
             // Main Render function
             void render();
-            void renderInfoView();
     };
 
 }

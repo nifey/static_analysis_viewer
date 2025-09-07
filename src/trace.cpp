@@ -292,16 +292,6 @@ namespace sail {
         processInstruction(currentInstruction);
     }
 
-    void Trace::renderInfoView() { 
-        ImGui::Begin("Info View");
-        if (timeline.size() != 0) {
-            Event &currentEvent = timeline.getCurrentEvent();
-            ImGui::Text(currentEvent.getTag().c_str());
-            ImGui::Text(currentEvent.getInfo().c_str());
-        }
-        ImGui::End();
-    }
-
     void Trace::render() {
         if (ImGui::IsKeyPressed(ImGuiKey_L, true) ||
                 ImGui::IsKeyPressed(ImGuiKey_RightArrow, true))
@@ -310,7 +300,35 @@ namespace sail {
                 ImGui::IsKeyPressed(ImGuiKey_LeftArrow, true))
             timeline.moveToPrevEvent();
 
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->Pos);
+        ImGui::SetNextWindowSize(viewport->Size);
+        auto screenSize = viewport->Size;
+        double paneWidthRatio = 0.7;
+        ImVec2 graphViewSize = ImVec2(screenSize.x * paneWidthRatio, screenSize.y);
+        ImVec2 sidePaneSize = ImVec2(screenSize.x * (1.0 - paneWidthRatio), screenSize.y);
+
+        auto windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoSavedSettings | 
+                ImGuiWindowFlags_NoDecoration;
+        ImGui::Begin("Viewer", nullptr, windowFlags);
+
+        // 1. Graph View
+        ImGui::SetNextWindowSize(graphViewSize);
         graph.renderGraphView(timeline.getCurrentGroup(graph), timeline.getCurrentEvent());
-        renderInfoView();
+
+        // 2. Side Pane
+        ImGui::SameLine();
+        ImGui::BeginChild("Side Pane", sidePaneSize, true, ImGuiChildFlags_FrameStyle);
+        if (ImGui::TreeNodeEx("Info view", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth)) {
+            if (timeline.size() != 0) {
+                Event &currentEvent = timeline.getCurrentEvent();
+                ImGui::Text(currentEvent.getTag().c_str());
+                ImGui::Text(currentEvent.getInfo().c_str());
+            }
+            ImGui::TreePop();
+        }
+        ImGui::EndChild();
+        ImGui::End();
     }
 }
