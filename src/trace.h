@@ -94,6 +94,7 @@ namespace sail {
             void addEvent(Event event)  { eventList.push_back(event); }
             unsigned long long size()   { return eventList.size(); }
             Event& getCurrentEvent()    { return eventList[currentTimelineIndex]; }
+            Event& getEventAtIndex(unsigned long long index)    { return eventList[index]; }
             void moveToNextEvent() {
                 if (currentTimelineIndex < eventList.size() - 1)
                     currentTimelineIndex++;

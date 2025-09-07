@@ -263,6 +263,23 @@ namespace sail {
             string tag = splitOnFirst(instructionHeader, " \t").second;
             Event event(EVENT_TYPE::GLOBAL_INFO, instructionBody, tag);
             timeline.addEvent(event);
+        } else if (instruction == ">>prevnodeinfo") {
+            string tag = splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second;
+            string previnfo = timeline.getEventAtIndex(timeline.getCurrentPrevEventIndex()).getInfo();
+            Event event(EVENT_TYPE::NODE_INFO, previnfo, tag);
+            event.setNode(graph.getNodeID(headerTokens[1]));
+            timeline.addEvent(event);
+        } else if (instruction == ">>prevedgeinfo") {
+            string tag = splitOnFirst(splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second, " \t").second;
+            string previnfo = timeline.getEventAtIndex(timeline.getCurrentPrevEventIndex()).getInfo();
+            Event event(EVENT_TYPE::EDGE_INFO, previnfo, tag);
+            event.setEdge(graph.getNodeID(headerTokens[1]), graph.getNodeID(headerTokens[2]));
+            timeline.addEvent(event);
+        } else if (instruction == ">>prevglobalinfo") {
+            string tag = splitOnFirst(instructionHeader, " \t").second;
+            string previnfo = timeline.getEventAtIndex(timeline.getCurrentPrevEventIndex()).getInfo();
+            Event event(EVENT_TYPE::GLOBAL_INFO, previnfo, tag);
+            timeline.addEvent(event);
         } else {
             cout << "Unknown instruction " << instruction << " found in " << instructionHeader << "\n";
             exit(0);
