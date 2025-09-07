@@ -15,6 +15,40 @@ namespace sail {
     typedef unsigned long long EdgeID;
     typedef unsigned long long AttributeID;
 
+    enum EVENT_TYPE {
+        NODE_INFO,
+        EDGE_INFO,
+        GLOBAL_INFO,
+    };
+
+    class Event {
+        private:
+            EVENT_TYPE type;
+            string tag, info;
+
+            // Depending on the type of event, we will use zero (global),
+            // one (node) or two(edge) Node IDs below
+            NodeID node1, node2;
+
+        public:
+            Event () {};
+            Event (EVENT_TYPE type, string info, string tag) 
+                : type(type), info(info), tag(tag) {};
+            void setNode(NodeID nodeID) { node1 = nodeID; }
+            void setEdge(NodeID srcNodeID, NodeID dstNodeID) {
+                node1 = srcNodeID; node2 = dstNodeID;
+            }
+
+            // Other getters
+            EVENT_TYPE getType() { return type; }
+            string getTag() { return tag; }
+            string getInfo() { return info; }
+            NodeID getNode1() { return node1; }
+            NodeID getNode2() { return node2; }
+
+            friend bool operator!=(const Event& lhs, const Event& rhs);
+    };
+
     class Graph {
         private:
             // Maps groupName -> Map of node names in that group to the corresponding NodeID
@@ -34,6 +68,7 @@ namespace sail {
 
             // Last displayed group : Used to figure out when to call GraphViz for layout
             string lastDisplayedGroup = "-------";
+            Event lastDisplayedEvent;
 
         public:
             void addNode(string nodeName, std::string nodeContents); 
@@ -47,38 +82,7 @@ namespace sail {
             vector<pair<NodeID, NodeID>> getActiveEdges(string currentGroup);
 
             // Render the active nodes in the NodeEditor
-            void renderGraphView(string currentGroup);
-    };
-
-    enum EVENT_TYPE {
-        NODE_INFO,
-        EDGE_INFO,
-        GLOBAL_INFO,
-    };
-
-    class Event {
-        private:
-            EVENT_TYPE type;
-            string tag, info;
-
-            // Depending on the type of event, we will use zero (global),
-            // one (node) or two(edge) Node IDs below
-            NodeID node1, node2;
-
-        public:
-            Event (EVENT_TYPE type, string info, string tag) 
-                : type(type), info(info), tag(tag) {};
-            void setNode(NodeID nodeID) { node1 = nodeID; }
-            void setEdge(NodeID srcNodeID, NodeID dstNodeID) {
-                node1 = srcNodeID; node2 = dstNodeID;
-            }
-
-            // Other getters
-            EVENT_TYPE getType() { return type; }
-            string getTag() { return tag; }
-            string getInfo() { return info; }
-            NodeID getNode1() { return node1; }
-            NodeID getNode2() { return node2; }
+            void renderGraphView(string currentGroup, Event currentEvent);
     };
 
     class Timeline {

@@ -35,6 +35,17 @@ namespace sail {
         return tokens;
     }
 
+    bool operator!=(const Event& lhs, const Event& rhs) {
+        if (lhs.type != rhs.type) return true;
+        if (lhs.type == NODE_INFO)
+            return tie(lhs.node1, lhs.tag, lhs.info) != tie(rhs.node1, rhs.tag, rhs.info);
+        else if (lhs.type == EDGE_INFO)
+            return tie(lhs.node1, lhs.node2, lhs.tag, lhs.info) != tie(rhs.node1, rhs.node2, rhs.tag, rhs.info);
+        else if (lhs.type == GLOBAL_INFO)
+            return tie(lhs.tag, lhs.info) != tie(rhs.tag, rhs.info);
+        assert(false);
+    }
+
     void Graph::addNode(string nodeName, std::string nodeContent) {
         auto splitName = splitOnFirst(nodeName, ":");
         string groupName = splitName.first;
@@ -114,7 +125,7 @@ namespace sail {
         return activeEdges;
     }
 
-    void Graph::renderGraphView(string currentGroup) {
+    void Graph::renderGraphView(string currentGroup, Event currentEvent) {
         static AttributeID attrID = 0;
         ImNodes::BeginNodeEditor();
         for (NodeID nodeID : getActiveNodeIDs(currentGroup)) {
@@ -174,10 +185,43 @@ namespace sail {
         }
 
         EdgeID edgeID = 0;
-        for (auto edge : getActiveEdges(currentGroup))
-            ImNodes::Link(edgeID++,
+        map<AttributeID, map<AttributeID, EdgeID>> edgeIDMap;
+        for (auto edge : getActiveEdges(currentGroup)) {
+            AttributeID srcID = outputAttributeIDMap[edge.first];
+            AttributeID dstID = inputAttributeIDMap[edge.second];
+            if (edgeIDMap.find(srcID) == edgeIDMap.end())
+                edgeIDMap[srcID];
+            if (edgeIDMap[srcID].find(dstID) == edgeIDMap[srcID].end())
+                edgeIDMap[srcID][dstID] = edgeID++;
+            ImNodes::Link(edgeIDMap[srcID][dstID],
                     outputAttributeIDMap[edge.first],
                     inputAttributeIDMap[edge.second]);
+        }
+
+        if (lastDisplayedEvent != currentEvent) {
+            lastDisplayedEvent = currentEvent;
+            if (currentEvent.getType() == NODE_INFO) {
+                NodeID currentNodeID = currentEvent.getNode1();
+                ImNodes::ClearNodeSelection();
+                ImNodes::ClearLinkSelection();
+                auto pos = ImNodes::GetNodeGridSpacePos(currentNodeID);
+                auto nodeSize = ImNodes::GetNodeDimensions(currentNodeID);
+                auto editorSize = ImNodes::GetEditorDimensions();
+                ImNodes::EditorContextResetPanning(ImVec2((editorSize.x - nodeSize.x)/ 2.0 - pos.x, (editorSize.y - nodeSize.y)/ 2.0 - pos.y));
+                ImNodes::SelectNode(currentNodeID);
+            } else if (currentEvent.getType() == EDGE_INFO) {
+                NodeID currentNodeID1 = currentEvent.getNode1();
+                NodeID currentNodeID2 = currentEvent.getNode2();
+                ImNodes::ClearNodeSelection();
+                ImNodes::ClearLinkSelection();
+                auto pos1 = ImNodes::GetNodeGridSpacePos(currentNodeID1);
+                auto pos2 = ImNodes::GetNodeGridSpacePos(currentNodeID2);
+                auto pos =  ImVec2((pos1.x + pos2.x) / 2.0, (pos1.y + pos2.y) / 2.0);
+                auto editorSize = ImNodes::GetEditorDimensions();
+                ImNodes::EditorContextResetPanning(ImVec2(editorSize.x / 2.0 - pos.x, editorSize.y / 2.0 - pos.y));
+                ImNodes::SelectLink(edgeIDMap[outputAttributeIDMap[currentNodeID1]][inputAttributeIDMap[currentNodeID2]]);
+            }
+        }
         ImNodes::MiniMap(0.3f, ImNodesMiniMapLocation_BottomRight);
         ImNodes::EndNodeEditor();
     }
@@ -266,7 +310,7 @@ namespace sail {
                 ImGui::IsKeyPressed(ImGuiKey_LeftArrow, true))
             timeline.moveToPrevEvent();
 
-        graph.renderGraphView(timeline.getCurrentGroup(graph));
+        graph.renderGraphView(timeline.getCurrentGroup(graph), timeline.getCurrentEvent());
         renderInfoView();
     }
 }

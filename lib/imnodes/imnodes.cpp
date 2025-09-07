@@ -2521,6 +2521,11 @@ ImVec2 GetNodeDimensions(int node_id)
     return node.Rect.GetSize();
 }
 
+ImVec2 GetEditorDimensions()
+{
+    return GImNodes->CanvasRectScreenSpace.GetSize();
+}
+
 void BeginNodeTitleBar()
 {
     IM_ASSERT(GImNodes->CurrentScope == ImNodesScope_Node);
