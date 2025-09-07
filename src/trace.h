@@ -102,6 +102,48 @@ namespace sail {
                 if (currentTimelineIndex > 0)
                     currentTimelineIndex--;
             }
+            unsigned long long getCurrentPrevEventIndex() {
+                Event &currentEvent = eventList[currentTimelineIndex];
+                EVENT_TYPE type = currentEvent.getType();
+                if (currentTimelineIndex == 0) return currentTimelineIndex;
+                for (unsigned long long index = currentTimelineIndex - 1; index >= 0; index--) {
+                    if (eventList[index].getType() == type) {
+                        if (type == GLOBAL_INFO) return index;
+                        else if (eventList[index].getNode1() == currentEvent.getNode1()) {
+                            if (type == NODE_INFO) return index;
+                            else if (eventList[index].getNode2() == currentEvent.getNode2()) {
+                                if (type == EDGE_INFO) return index;
+                            }
+                        }
+                    }
+                }
+                return currentTimelineIndex;
+            }
+            unsigned long long getCurrentNextEventIndex() {
+                Event &currentEvent = eventList[currentTimelineIndex];
+                EVENT_TYPE type = currentEvent.getType();
+                unsigned long long endIndex = eventList.size() - 1;
+                if (currentTimelineIndex == endIndex) return currentTimelineIndex;
+                for (unsigned long long index = currentTimelineIndex + 1; index <= endIndex; index++) {
+                    if (eventList[index].getType() == type) {
+                        if (type == GLOBAL_INFO) return index;
+                        else if (eventList[index].getNode1() == currentEvent.getNode1()) {
+                            if (type == NODE_INFO) return index;
+                            else if (eventList[index].getNode2() == currentEvent.getNode2()) {
+                                if (type == EDGE_INFO) return index;
+                            }
+                        }
+                    }
+                }
+                return currentTimelineIndex;
+            }
+            void moveToCurrentNextEvent() {
+                currentTimelineIndex = getCurrentNextEventIndex();
+            }
+            void moveToCurrentPrevEvent() {
+                currentTimelineIndex = getCurrentPrevEventIndex();
+            }
+
             string getCurrentGroup(Graph &graph) {
                 unsigned long long lastGraphEventIndex = currentTimelineIndex;
                 if (eventList.size() == 0) return "";

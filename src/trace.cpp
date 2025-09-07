@@ -299,6 +299,12 @@ namespace sail {
         if (ImGui::IsKeyPressed(ImGuiKey_H, true) ||
                 ImGui::IsKeyPressed(ImGuiKey_LeftArrow, true))
             timeline.moveToPrevEvent();
+        if (ImGui::IsKeyPressed(ImGuiKey_K, true) ||
+                ImGui::IsKeyPressed(ImGuiKey_UpArrow, true))
+            timeline.moveToCurrentNextEvent();
+        if (ImGui::IsKeyPressed(ImGuiKey_J, true) ||
+                ImGui::IsKeyPressed(ImGuiKey_DownArrow, true))
+            timeline.moveToCurrentPrevEvent();
 
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
