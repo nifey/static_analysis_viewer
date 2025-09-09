@@ -309,7 +309,11 @@ namespace sail {
         processInstruction(currentInstruction);
     }
 
+    float timelinePos = 0.0;
     void Trace::render() {
+        if (timelinePos != timeline.getFloatPosition())
+            timeline.moveToFloatPosition(timelinePos);
+
         if (ImGui::IsKeyPressed(ImGuiKey_L, true) ||
                 ImGui::IsKeyPressed(ImGuiKey_RightArrow, true))
             timeline.moveToNextEvent();
@@ -322,6 +326,8 @@ namespace sail {
         if (ImGui::IsKeyPressed(ImGuiKey_J, true) ||
                 ImGui::IsKeyPressed(ImGuiKey_DownArrow, true))
             timeline.moveToCurrentPrevEvent();
+
+        timelinePos = timeline.getFloatPosition();
 
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
@@ -343,6 +349,13 @@ namespace sail {
         // 2. Side Pane
         ImGui::SameLine();
         ImGui::BeginChild("Side Pane", sidePaneSize, true, ImGuiChildFlags_FrameStyle);
+        if (ImGui::ArrowButton("Left", ImGuiDir_Left))
+            timeline.moveToPrevEvent();
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("Right", ImGuiDir_Right))
+            timeline.moveToNextEvent();
+        ImGui::SameLine();
+        ImGui::SliderFloat("Timeline", &timelinePos, 0.0, 1.0, "", 0);
         if (ImGui::TreeNodeEx("Info view", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth)) {
             if (timeline.size() != 0) {
                 Event &currentEvent = timeline.getCurrentEvent();
