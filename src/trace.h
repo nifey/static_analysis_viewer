@@ -117,6 +117,7 @@ namespace sail {
                             }
                         }
                     }
+                    if (index == 0) break;
                 }
                 return currentTimelineIndex;
             }
