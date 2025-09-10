@@ -5,6 +5,7 @@
 #include "imnodes.h"
 #include <iostream>
 #include <fstream>
+#include <regex>
 #include <gvc.h>
 
 using namespace std;
@@ -310,6 +311,7 @@ namespace sail {
     }
 
     float timelinePos = 0.0;
+    char regexString[100];
     void Trace::render() {
         if (timelinePos != timeline.getFloatPosition())
             timeline.moveToFloatPosition(timelinePos);
@@ -348,6 +350,7 @@ namespace sail {
 
         // 2. Side Pane
         ImGui::SameLine();
+        if (timeline.size() == 0) return;
         ImGui::BeginChild("Side Pane", sidePaneSize, true, ImGuiChildFlags_FrameStyle);
         if (ImGui::ArrowButton("Left", ImGuiDir_Left))
             timeline.moveToPrevEvent();
@@ -356,12 +359,21 @@ namespace sail {
             timeline.moveToNextEvent();
         ImGui::SameLine();
         ImGui::SliderFloat("Timeline", &timelinePos, 0.0, 1.0, "", 0);
+        Event &currentEvent = timeline.getCurrentEvent();
         if (ImGui::TreeNodeEx("Info view", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth)) {
-            if (timeline.size() != 0) {
-                Event &currentEvent = timeline.getCurrentEvent();
-                ImGui::Text(currentEvent.getTag().c_str());
-                ImGui::Text(currentEvent.getInfo().c_str());
-            }
+            ImGui::Text(currentEvent.getTag().c_str());
+            ImGui::Text(currentEvent.getInfo().c_str());
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNodeEx("Filtered Info view", ImGuiTreeNodeFlags_SpanFullWidth)) {
+            ImGui::InputText("Regular Expression", regexString, 99);
+            regex regex(regexString, regex_constants::basic | regex_constants::icase);
+            string stringToDisplay;
+            smatch match;
+            for (string line : splitOn(currentEvent.getInfo().c_str(), "\n"))
+                if (regex_search(line, match, regex))
+                    stringToDisplay.append(line + "\n");
+            ImGui::Text(stringToDisplay.c_str());
             ImGui::TreePop();
         }
         ImGui::EndChild();
