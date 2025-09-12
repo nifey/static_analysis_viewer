@@ -13,6 +13,12 @@ apt-get install libsdl2-dev libopengl-dev libgraphviz-dev
 # On Mac
 brew install sdl2
 
+#To install graphviz on Mac 
+brew install graphviz
+
+#To verify the installation of graphviz use
+dot -V
+
 # Build
 cd src
 make
