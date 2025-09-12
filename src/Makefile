@@ -62,6 +62,7 @@ ifeq ($(UNAME_S), Darwin) #APPLE
 
 	CXXFLAGS += `sdl2-config --cflags`
 	CXXFLAGS += -I/usr/local/include -I/opt/local/include
+	CXXFLAGS += -I$(shell brew --prefix)/include -I$(shell brew --prefix)/include/graphviz
 	CFLAGS = $(CXXFLAGS)
 endif
 
