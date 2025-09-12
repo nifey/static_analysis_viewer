@@ -89,19 +89,35 @@ namespace sail {
         private:
             vector<Event> eventList;
             unsigned long long currentTimelineIndex = 0;
-
+            float timelineFloatPosition = 0.0;
         public:
             void addEvent(Event event)  { eventList.push_back(event); }
             unsigned long long size()   { return eventList.size(); }
             Event& getCurrentEvent()    { return eventList[currentTimelineIndex]; }
             Event& getEventAtIndex(unsigned long long index)    { return eventList[index]; }
+
+            void setTimelineIndex(unsigned long long index) {
+                currentTimelineIndex = index;
+                timelineFloatPosition = ((float) currentTimelineIndex / eventList.size());
+            }
+            unsigned long long getTimelineIndex() {
+                return currentTimelineIndex;
+            }
+            void setFloatPosition(float position) {
+                currentTimelineIndex = position * eventList.size();
+                timelineFloatPosition = ((float) currentTimelineIndex / eventList.size());
+            }
+            float getFloatPosition () {
+                return ((float) currentTimelineIndex) / eventList.size();
+            }
+
             void moveToNextEvent() {
                 if (currentTimelineIndex < eventList.size() - 1)
-                    currentTimelineIndex++;
+                    setTimelineIndex(currentTimelineIndex+1);
             }
             void moveToPrevEvent() {
                 if (currentTimelineIndex > 0)
-                    currentTimelineIndex--;
+                    setTimelineIndex(currentTimelineIndex-1);
             }
             unsigned long long getCurrentPrevEventIndex() {
                 Event &currentEvent = eventList[currentTimelineIndex];
@@ -117,6 +133,7 @@ namespace sail {
                             }
                         }
                     }
+                    if (index == 0) break;
                 }
                 return currentTimelineIndex;
             }
@@ -139,10 +156,13 @@ namespace sail {
                 return currentTimelineIndex;
             }
             void moveToCurrentNextEvent() {
-                currentTimelineIndex = getCurrentNextEventIndex();
+                setTimelineIndex(getCurrentNextEventIndex());
             }
             void moveToCurrentPrevEvent() {
-                currentTimelineIndex = getCurrentPrevEventIndex();
+                setTimelineIndex(getCurrentPrevEventIndex());
+            }
+            void moveToFloatPosition (float timelinePosition) {
+                currentTimelineIndex = timelinePosition * eventList.size();
             }
 
             string getCurrentGroup(Graph &graph) {
