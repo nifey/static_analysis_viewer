@@ -106,18 +106,18 @@ namespace sail {
                 if (list.size() <= 1) return 0;
                 unsigned long long minIndex = 0, middleIndex = 0;
                 unsigned long long maxIndex = list.size() - 1;
-                while (minIndex < maxIndex) {
+                while (minIndex <= maxIndex) {
                     middleIndex = (minIndex + maxIndex) / 2;
-                    if (middleIndex >= list.size()) // Due to overflow
-                        return 0;
                     if (list[middleIndex] == searchValue)
                         return middleIndex;
-                    else if (list[middleIndex] > searchValue)
+                    else if (list[middleIndex] > searchValue) {
+                        if (middleIndex == 0)
+                            break;
                         maxIndex = middleIndex - 1;
-                    else
+                    } else
                         minIndex = middleIndex + 1;
                 }
-                return 0;
+                return minIndex;
             }
 
             unsigned long long getPrevEventIndex(unsigned long long currentIndex, EVENT_TYPE type,
