@@ -219,7 +219,7 @@ namespace sail {
                                 inputAttributeIDMap[currentNodeID2])]);
             }
         }
-        ImNodes::MiniMap(0.3f, ImNodesMiniMapLocation_BottomRight);
+        ImNodes::MiniMap(0.2f, ImNodesMiniMapLocation_TopRight);
         ImNodes::EndNodeEditor();
     }
 
