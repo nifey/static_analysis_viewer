@@ -2,7 +2,16 @@
 
 ![Screenshot](screenshot.png)
 
-## Usage
+- A visualization and debugging tool for Static analysis, that can display the analysed code as a sequence of events on a Graph, allowing us to view the intermediate results of the analysis. The viewer uses a simple format to specify the graph and sequence of events, that is agnostic to the programming language, the analysis framework or the Intermediate Representation used.
+- Usage: Generate the trace file from your static analysis by printing at the relevant locations in the analysis. Then load the trace file and view it in the viewer.
+- The repository also contains helper libraires that provides loggers to print data into the tracefile (in the viewer format).
+    - [DfLogger](./DfLogger) : Logger for Java programming language
+    - [CPP_logger](./CPP_logger/TraceWriter.hpp) : Header only library in C++ for LLVM (version 20)
+    - [Python_Logger](./Python_Logger) : Logger for Python programming language
+- Built by Team Debug4 : Abdun Nihaal, Omkar Dhawal, Divya Rathore and Anubhab Khajuria for [Segfault Compiler Hackathon](https://segfault.compilertech.org).
+- Built using awesome open source libraries : [IMGui](https://github.com/ocornut/imgui), [IMNodes](https://github.com/nelarius/imnodes) and [GraphViz](https://graphviz.org).
+
+## Building the viewer
 ```sh
 # Pull libraries
 git submodule update --init
@@ -22,10 +31,24 @@ dot -V
 # Build
 cd src
 make
-
-# Run
-./sail_viewer <tracefile>
 ```
+
+## Using the viewer
+- Generate the tracefile in the [viewer format](#tracefile-format)
+- Run the viewer with the tracefile as command-line argument
+    ```
+    ./sail_viewer <tracefile>
+    ```
+- The viewer has two panes:
+    1. *Graph View* : On the left, the graph of the current group is displayed. The mini map that shows the zoomed out structure of the graph can be used for scrolling in the graph view.
+    2. *Info view* : On the right, the information associated with the events are displayed in the Info view dropdown. The timeline on the top, shows the current position in the sequence of events. The arrow buttons as well as the timeline, can be used to move across events.
+- The *Filtered Info View* can be used to filter and display only the relevant information, by specifying a regular expression. Only the lines in the information that match the regular expression will be displayed in the filtered info view.
+- **Keyboard shortcuts**
+    - Left arrow (or h) can be used to move to the previous event.
+    - Right arrow (or l) can be used to move to the next event.
+    - Up arrow (or k) can be used to move to the next event at the same node or edge as the current event.
+    - Down arrow (or j) can be used to move to the previous event at the same node or edge as the current event.
+- **Hovering** : In the graph view, when we hover the mouse on a node or edge, the information of the last event at that node or edge is displayed in the Info and Filtered Info views.
 
 ## Tracefile Format
 
