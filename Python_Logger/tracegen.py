@@ -12,22 +12,22 @@ class TraceLogger:
         self.file.close()
 
     def selectGroup(self, name):
-        self.file.write(f"selectgroup {name}\n")
+        self.file.write(f">>selectgroup {name}\n")
 
     def addNode(self, group, nodeid, content=None):
-        self.file.write(f"node {group}:{nodeid}\n")
+        self.file.write(f">>node {group}:{nodeid}\n")
         if content:
             self.file.write(content.replace("\n", " ") + "\n")
 
     def addEdge(self, group, src, dst):
-        self.file.write(f"edge {group}:{src} {group}:{dst}\n")
+        self.file.write(f">>edge {group}:{src} {group}:{dst}\n")
 
     def addNodeInfo(self, group, nodeid, facts, tag=""):
         key = (group, nodeid, tag)
         if key in self.last_nodeinfo and self.last_nodeinfo[key] == facts:
-            self.file.write(f"prevnodeinfo {group}:{nodeid} {tag}\n")
+            self.file.write(f">>prevnodeinfo {group}:{nodeid} {tag}\n")
         else:
-            self.file.write(f"nodeinfo {group}:{nodeid} {tag}\n")
+            self.file.write(f">>nodeinfo {group}:{nodeid} {tag}\n")
             self.file.write(facts + "\n")
             self.last_nodeinfo[key] = facts
 
