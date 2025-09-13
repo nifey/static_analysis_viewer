@@ -36,17 +36,6 @@ namespace sail {
         return tokens;
     }
 
-    bool operator!=(const Event& lhs, const Event& rhs) {
-        if (lhs.type != rhs.type) return true;
-        if (lhs.type == NODE_INFO)
-            return tie(lhs.node1, lhs.tag, lhs.info) != tie(rhs.node1, rhs.tag, rhs.info);
-        else if (lhs.type == EDGE_INFO)
-            return tie(lhs.node1, lhs.node2, lhs.tag, lhs.info) != tie(rhs.node1, rhs.node2, rhs.tag, rhs.info);
-        else if (lhs.type == GLOBAL_INFO)
-            return tie(lhs.tag, lhs.info) != tie(rhs.tag, rhs.info);
-        assert(false);
-    }
-
     void Graph::addNode(string nodeName, std::string nodeContent) {
         auto splitName = splitOnFirst(nodeName, ":");
         string groupName = splitName.first;
@@ -201,8 +190,8 @@ namespace sail {
 
         if (lastDisplayedEvent != currentEvent) {
             lastDisplayedEvent = currentEvent;
-            if (currentEvent.getType() == NODE_INFO) {
-                NodeID currentNodeID = currentEvent.getNode1();
+            if (get<0>(currentEvent) == NODE_INFO) {
+                NodeID currentNodeID = get<3>(currentEvent);
                 ImNodes::ClearNodeSelection();
                 ImNodes::ClearLinkSelection();
                 auto pos = ImNodes::GetNodeGridSpacePos(currentNodeID);
@@ -210,9 +199,9 @@ namespace sail {
                 auto editorSize = ImNodes::GetEditorDimensions();
                 ImNodes::EditorContextResetPanning(ImVec2((editorSize.x - nodeSize.x)/ 2.0 - pos.x, (editorSize.y - nodeSize.y)/ 2.0 - pos.y));
                 ImNodes::SelectNode(currentNodeID);
-            } else if (currentEvent.getType() == EDGE_INFO) {
-                NodeID currentNodeID1 = currentEvent.getNode1();
-                NodeID currentNodeID2 = currentEvent.getNode2();
+            } else if (get<0>(currentEvent) == EDGE_INFO) {
+                NodeID currentNodeID1 = get<3>(currentEvent);
+                NodeID currentNodeID2 = get<4>(currentEvent);
                 ImNodes::ClearNodeSelection();
                 ImNodes::ClearLinkSelection();
                 auto pos1 = ImNodes::GetNodeGridSpacePos(currentNodeID1);
@@ -225,6 +214,26 @@ namespace sail {
         }
         ImNodes::MiniMap(0.3f, ImNodesMiniMapLocation_BottomRight);
         ImNodes::EndNodeEditor();
+    }
+
+    void Timeline::addEvent(EVENT_TYPE type, string tag, string infoStr,
+            NodeID node1 = 0, NodeID node2 = 0) {
+        unsigned long long currentGlobalTimelineIndex = eventList.size();
+        unsigned long long infoStrIndex = eventInfoStrings.size();
+        eventInfoStrings.push_back(infoStr);
+        eventList.push_back(make_tuple(type, tag, infoStrIndex, node1, node2));
+
+        auto eventTuple = make_tuple(type, node1, node2);
+        eventData[eventTuple].push_back(currentGlobalTimelineIndex);
+    }
+
+    void Timeline::addEvent(EVENT_TYPE type, string tag, unsigned long long prevInfoStrIndex,
+            NodeID node1 = 0, NodeID node2 = 0) {
+        unsigned long long currentGlobalTimelineIndex = eventList.size();
+        eventList.push_back(make_tuple(type, tag, prevInfoStrIndex, node1, node2));
+
+        auto eventTuple = make_tuple(type, node1, node2);
+        eventData[eventTuple].push_back(currentGlobalTimelineIndex);
     }
 
     void Trace::processInstruction(string currentInstruction) {
@@ -252,38 +261,32 @@ namespace sail {
             this->graph.addEdge(headerTokens[1], headerTokens[2]);
         } else if (instruction == ">>nodeinfo") {
             string tag = splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second;
-            Event event(EVENT_TYPE::NODE_INFO, instructionBody, tag);
-            event.setNode(graph.getNodeID(headerTokens[1]));
-            timeline.addEvent(event);
+            timeline.addEvent(NODE_INFO, instructionBody, tag, graph.getNodeID(headerTokens[1]));
         } else if (instruction == ">>edgeinfo") {
             string tag = splitOnFirst(splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second, " \t").second;
-            Event event(EVENT_TYPE::EDGE_INFO, instructionBody, tag);
-            event.setEdge(graph.getNodeID(headerTokens[1]), graph.getNodeID(headerTokens[2]));
-            timeline.addEvent(event);
+            timeline.addEvent(EDGE_INFO, instructionBody, tag, graph.getNodeID(headerTokens[1]), graph.getNodeID(headerTokens[2]));
         } else if (instruction == ">>globalinfo") {
             string tag = splitOnFirst(instructionHeader, " \t").second;
-            Event event(EVENT_TYPE::GLOBAL_INFO, instructionBody, tag);
-            timeline.addEvent(event);
+            timeline.addEvent(EVENT_TYPE::GLOBAL_INFO, instructionBody, tag);
         } else if (instruction == ">>prevnodeinfo") {
             string tag = splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second;
-            string previnfo = timeline.getEventAtIndex(timeline.getCurrentPrevEventIndex()).getInfo();
-            Event event(EVENT_TYPE::NODE_INFO, previnfo, tag);
-            event.setNode(graph.getNodeID(headerTokens[1]));
-            timeline.addEvent(event);
+            NodeID node1 = graph.getNodeID(headerTokens[1]);
+            unsigned long long prevInfoStrIndex = get<2>(timeline.getEventAtIndex(
+                        timeline.getPrevEventIndex(timeline.size()-1, NODE_INFO, node1)));
+            timeline.addEvent(NODE_INFO, tag, prevInfoStrIndex, node1);
         } else if (instruction == ">>prevedgeinfo") {
             string tag = splitOnFirst(splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second, " \t").second;
-            string previnfo = timeline.getEventAtIndex(timeline.getCurrentPrevEventIndex()).getInfo();
-            Event event(EVENT_TYPE::EDGE_INFO, previnfo, tag);
-            event.setEdge(graph.getNodeID(headerTokens[1]), graph.getNodeID(headerTokens[2]));
-            timeline.addEvent(event);
+            NodeID node1 = graph.getNodeID(headerTokens[1]), node2 = graph.getNodeID(headerTokens[2]);
+            unsigned long long prevInfoStrIndex = get<2>(timeline.getEventAtIndex(
+                        timeline.getPrevEventIndex(timeline.size()-1, EDGE_INFO, node1, node2)));
+            timeline.addEvent(EDGE_INFO, tag, prevInfoStrIndex, node1, node2);
         } else if (instruction == ">>prevglobalinfo") {
             string tag = splitOnFirst(instructionHeader, " \t").second;
-            string previnfo = timeline.getEventAtIndex(timeline.getCurrentPrevEventIndex()).getInfo();
-            Event event(EVENT_TYPE::GLOBAL_INFO, previnfo, tag);
-            timeline.addEvent(event);
+            unsigned long long prevInfoStrIndex = get<2>(timeline.getEventAtIndex(
+                        timeline.getPrevEventIndex(timeline.size()-1, GLOBAL_INFO)));
+            timeline.addEvent(GLOBAL_INFO, tag, prevInfoStrIndex);
         } else {
             cout << "Unknown instruction " << instruction << " found in " << instructionHeader << "\n";
-            exit(0);
         }
     }
 
@@ -359,10 +362,14 @@ namespace sail {
             timeline.moveToNextEvent();
         ImGui::SameLine();
         ImGui::SliderFloat("Timeline", &timelinePos, 0.0, 1.0, "", 0);
+
         Event &currentEvent = timeline.getCurrentEvent();
+        string currentEventTag = get<1>(currentEvent);
+        string currentEventInfo = timeline.getStringAtIndex(get<2>(currentEvent));
+
         if (ImGui::TreeNodeEx("Info view", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth)) {
-            ImGui::Text(currentEvent.getTag().c_str());
-            ImGui::Text(currentEvent.getInfo().c_str());
+            ImGui::Text(currentEventTag.c_str());
+            ImGui::Text(currentEventInfo.c_str());
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("Filtered Info view", ImGuiTreeNodeFlags_SpanFullWidth)) {
@@ -370,7 +377,7 @@ namespace sail {
             regex regex(regexString, regex_constants::basic | regex_constants::icase);
             string stringToDisplay;
             smatch match;
-            for (string line : splitOn(currentEvent.getInfo().c_str(), "\n"))
+            for (string line : splitOn(currentEventInfo, "\n"))
                 if (regex_search(line, match, regex))
                     stringToDisplay.append(line + "\n");
             ImGui::Text(stringToDisplay.c_str());

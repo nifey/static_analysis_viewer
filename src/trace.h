@@ -15,39 +15,8 @@ namespace sail {
     typedef unsigned long long EdgeID;
     typedef unsigned long long AttributeID;
 
-    enum EVENT_TYPE {
-        NODE_INFO,
-        EDGE_INFO,
-        GLOBAL_INFO,
-    };
-
-    class Event {
-        private:
-            EVENT_TYPE type;
-            string tag, info;
-
-            // Depending on the type of event, we will use zero (global),
-            // one (node) or two(edge) Node IDs below
-            NodeID node1, node2;
-
-        public:
-            Event () {};
-            Event (EVENT_TYPE type, string info, string tag) 
-                : type(type), info(info), tag(tag) {};
-            void setNode(NodeID nodeID) { node1 = nodeID; }
-            void setEdge(NodeID srcNodeID, NodeID dstNodeID) {
-                node1 = srcNodeID; node2 = dstNodeID;
-            }
-
-            // Other getters
-            EVENT_TYPE getType() { return type; }
-            string getTag() { return tag; }
-            string getInfo() { return info; }
-            NodeID getNode1() { return node1; }
-            NodeID getNode2() { return node2; }
-
-            friend bool operator!=(const Event& lhs, const Event& rhs);
-    };
+    enum EVENT_TYPE { NODE_INFO, EDGE_INFO, GLOBAL_INFO };
+    typedef tuple<EVENT_TYPE, string, unsigned long long, NodeID, NodeID> Event;
 
     class Graph {
         private:
@@ -87,14 +56,24 @@ namespace sail {
 
     class Timeline {
         private:
-            vector<Event> eventList;
+            // Vector of info strings
+            vector<string> eventInfoStrings;
+            // Event : Type, Tag, InfoStrIndex, NodeID1, NodeID2
+            vector<tuple<EVENT_TYPE, string, unsigned long long, NodeID, NodeID>> eventList;
+            // Map from the Event tuple to a sorted vector indices in the eventList
+            // Used for moving between events of the same node / edge, and for hovering
+            map<tuple<enum EVENT_TYPE, NodeID, NodeID>, vector<unsigned long long>> eventData;
+
             unsigned long long currentTimelineIndex = 0;
             float timelineFloatPosition = 0.0;
+
         public:
-            void addEvent(Event event)  { eventList.push_back(event); }
+            void addEvent(EVENT_TYPE type, string tag, string info, NodeID node1, NodeID node2);
+            void addEvent(EVENT_TYPE type, string tag, unsigned long long prevInfoStrIndex, NodeID node1, NodeID node2);
             unsigned long long size()   { return eventList.size(); }
             Event& getCurrentEvent()    { return eventList[currentTimelineIndex]; }
             Event& getEventAtIndex(unsigned long long index)    { return eventList[index]; }
+            string& getStringAtIndex(unsigned long long index)    { return eventInfoStrings[index]; }
 
             void setTimelineIndex(unsigned long long index) {
                 currentTimelineIndex = index;
@@ -119,41 +98,54 @@ namespace sail {
                 if (currentTimelineIndex > 0)
                     setTimelineIndex(currentTimelineIndex-1);
             }
-            unsigned long long getCurrentPrevEventIndex() {
-                Event &currentEvent = eventList[currentTimelineIndex];
-                EVENT_TYPE type = currentEvent.getType();
-                if (currentTimelineIndex == 0) return currentTimelineIndex;
-                for (unsigned long long index = currentTimelineIndex - 1; index >= 0; index--) {
-                    if (eventList[index].getType() == type) {
-                        if (type == GLOBAL_INFO) return index;
-                        else if (eventList[index].getNode1() == currentEvent.getNode1()) {
-                            if (type == NODE_INFO) return index;
-                            else if (eventList[index].getNode2() == currentEvent.getNode2()) {
-                                if (type == EDGE_INFO) return index;
-                            }
-                        }
-                    }
-                    if (index == 0) break;
+
+            unsigned long long getIndexInSortedList(vector<unsigned long long> &list, unsigned long long searchValue) {
+                if (list.size() == 1) return 0;
+                unsigned long long minIndex = 0, middleIndex = 0;
+                unsigned long long maxIndex = list.size() - 1;
+                while (minIndex < maxIndex) {
+                    middleIndex = (minIndex + maxIndex) / 2;
+                    if (list[middleIndex] == searchValue)
+                        return middleIndex;
+                    else if (list[middleIndex] > searchValue)
+                        maxIndex = middleIndex - 1;
+                    else
+                        minIndex = middleIndex + 1;
                 }
-                return currentTimelineIndex;
+                return 0;
+            }
+
+            unsigned long long getPrevEventIndex(unsigned long long currentIndex, EVENT_TYPE type,
+                    NodeID node1 = 0, NodeID node2 = 0) {
+                auto eventTuple = make_tuple(type, node1, node2);
+                auto size = eventData[eventTuple].size();
+                if (size == 0) return currentTimelineIndex;
+
+                auto eventDataIndex = getIndexInSortedList(eventData[eventTuple], currentTimelineIndex);
+                if (eventDataIndex == 0)
+                    return eventData[eventTuple][0];
+                return eventData[eventTuple][eventDataIndex - 1];
+            }
+            unsigned long long getNextEventIndex(unsigned long long currentIndex, EVENT_TYPE type,
+                    NodeID node1 = 0, NodeID node2 = 0) {
+                auto eventTuple = make_tuple(type, node1, node2);
+                auto size = eventData[eventTuple].size();
+                if (size == 0) return currentTimelineIndex;
+
+                auto eventDataIndex = getIndexInSortedList(eventData[eventTuple], currentTimelineIndex);
+                if (eventDataIndex == size - 1)
+                    return eventData[eventTuple][size - 1];
+                return eventData[eventTuple][eventDataIndex + 1];
+            }
+            unsigned long long getCurrentPrevEventIndex() {
+                EVENT_TYPE type; NodeID node1, node2;
+                tie(type, ignore, ignore, node1, node2) = eventList[currentTimelineIndex];
+                return getPrevEventIndex(currentTimelineIndex, type, node1, node2);
             }
             unsigned long long getCurrentNextEventIndex() {
-                Event &currentEvent = eventList[currentTimelineIndex];
-                EVENT_TYPE type = currentEvent.getType();
-                unsigned long long endIndex = eventList.size() - 1;
-                if (currentTimelineIndex == endIndex) return currentTimelineIndex;
-                for (unsigned long long index = currentTimelineIndex + 1; index <= endIndex; index++) {
-                    if (eventList[index].getType() == type) {
-                        if (type == GLOBAL_INFO) return index;
-                        else if (eventList[index].getNode1() == currentEvent.getNode1()) {
-                            if (type == NODE_INFO) return index;
-                            else if (eventList[index].getNode2() == currentEvent.getNode2()) {
-                                if (type == EDGE_INFO) return index;
-                            }
-                        }
-                    }
-                }
-                return currentTimelineIndex;
+                EVENT_TYPE type; NodeID node1, node2;
+                tie(type, ignore, ignore, node1, node2) = eventList[currentTimelineIndex];
+                return getNextEventIndex(currentTimelineIndex, type, node1, node2);
             }
             void moveToCurrentNextEvent() {
                 setTimelineIndex(getCurrentNextEventIndex());
@@ -168,11 +160,11 @@ namespace sail {
             string getCurrentGroup(Graph &graph) {
                 unsigned long long lastGraphEventIndex = currentTimelineIndex;
                 if (eventList.size() == 0) return "";
-                while (lastGraphEventIndex > 0 && eventList[lastGraphEventIndex].getType() == GLOBAL_INFO)
+                while (lastGraphEventIndex > 0 && get<0>(eventList[lastGraphEventIndex]) == GLOBAL_INFO)
                     lastGraphEventIndex--;
-                if (eventList[lastGraphEventIndex].getType() == GLOBAL_INFO)
+                if (get<0>(eventList[lastGraphEventIndex]) == GLOBAL_INFO)
                     return "";
-                NodeID lastActiveNode = eventList[lastGraphEventIndex].getNode1();
+                NodeID lastActiveNode = get<3>(eventList[lastGraphEventIndex]);
                 return graph.getNodeGroupName(lastActiveNode);
             }
     };
