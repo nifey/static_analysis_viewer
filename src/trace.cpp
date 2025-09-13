@@ -320,11 +320,14 @@ namespace sail {
         processInstruction(currentInstruction);
     }
 
+    float lastTimelinePos = 0.0;
     float timelinePos = 0.0;
     char regexString[100];
     void Trace::render() {
-        if (timelinePos != timeline.getFloatPosition())
+        if (timelinePos != lastTimelinePos) {
             timeline.moveToFloatPosition(timelinePos);
+            lastTimelinePos = timelinePos;
+        }
 
         if (ImGui::IsKeyPressed(ImGuiKey_L, true) ||
                 ImGui::IsKeyPressed(ImGuiKey_RightArrow, true))
