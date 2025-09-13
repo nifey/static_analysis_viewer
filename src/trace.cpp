@@ -7,6 +7,7 @@
 #include <fstream>
 #include <regex>
 #include <gvc.h>
+#define STR(v) const_cast<char *>(v)
 
 using namespace std;
 
@@ -140,12 +141,12 @@ namespace sail {
             lastDisplayedGroup = currentGroup;
 
             GVC_t* gvc = gvContext();
-            Agraph_t* G = agopen("graph", Agdirected, nullptr);
-            agattr(G, AGNODE, "width", "1");
-            agattr(G, AGNODE, "height", "1");
-            agattr(G, AGNODE, "shape", "box");
-            agattr(G, AGNODE, "fixedsize", "true");
-            agset(G, "dpi", "72");
+            Agraph_t* G = agopen(STR("graph"), Agdirected, nullptr);
+            agattr(G, AGNODE, STR("width"), STR("1"));
+            agattr(G, AGNODE, STR("height"), STR("1"));
+            agattr(G, AGNODE, STR("shape"), STR("box"));
+            agattr(G, AGNODE, STR("fixedsize"), STR("true"));
+            agset(G, STR("dpi"), STR("72"));
             const double dpi = 72.0;
 
             // Construct the Agraph from our graph representation
@@ -157,8 +158,8 @@ namespace sail {
                 edgeMap[edge] = agedge(G, nodeMap[edge.first], nodeMap[edge.second], nullptr, true);
             for (NodeID nodeID : getActiveNodeIDs(currentGroup)) {
                 auto dimensions = ImNodes::GetNodeDimensions(nodeID);
-                agset(nodeMap[nodeID], "width", const_cast<char*>(to_string(dimensions[0]/dpi).c_str()));
-                agset(nodeMap[nodeID], "height", const_cast<char*>(to_string(dimensions[1]/dpi).c_str()));
+                agset(nodeMap[nodeID], STR("width"), STR(to_string(dimensions[0]/dpi).c_str()));
+                agset(nodeMap[nodeID], STR("height"), STR(to_string(dimensions[1]/dpi).c_str()));
             }
 
             // Use GraphViz layout to layout the graph
