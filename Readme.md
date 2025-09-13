@@ -8,7 +8,7 @@
     - [DfLogger](./DfLogger) : Logger for Java programming language
     - [CPP_logger](./CPP_logger/TraceWriter.hpp) : Header only library in C++ for LLVM (version 20)
     - [Python_Logger](./Python_Logger) : Logger for Python programming language
-- Built by Team Debug4 : Abdun Nihaal, Omkar Dhawal, Divya Rathore and Anubhab Khajuria for [Segfault Compiler Hackathon](https://segfault.compilertech.org).
+- Built by Team Debug4 : Abdun Nihaal, Omkar Dhawal, Divya Rathore and Anubhab for [Segfault Compiler Hackathon](https://segfault.compilertech.org).
 - Built using awesome open source libraries : [IMGui](https://github.com/ocornut/imgui), [IMNodes](https://github.com/nelarius/imnodes) and [GraphViz](https://graphviz.org).
 
 ## Building the viewer
