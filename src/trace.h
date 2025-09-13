@@ -34,6 +34,8 @@ namespace sail {
             // Map from nodeID to input/output attribute ID
             map<NodeID, AttributeID> inputAttributeIDMap;
             map<NodeID, AttributeID> outputAttributeIDMap;
+            map<pair<AttributeID, AttributeID>, EdgeID> attrToLinkIDMap;
+            map<EdgeID, pair<NodeID, NodeID>> linkIDToNodeIDMap;
 
             // Last displayed group : Used to figure out when to call GraphViz for layout
             string lastDisplayedGroup = "-------";
@@ -46,6 +48,7 @@ namespace sail {
             std::string getNodeName(NodeID nodeID);
             std::string getNodeGroupName(NodeID nodeID);
             std::string getNodeContents(NodeID nodeID);
+            pair<NodeID, NodeID> getLink(EdgeID linkID);
 
             vector<NodeID> getActiveNodeIDs(string currentGroup);
             vector<pair<NodeID, NodeID>> getActiveEdges(string currentGroup);

@@ -100,6 +100,10 @@ namespace sail {
         return nodeContents[nodeID];
     }
 
+    pair<NodeID, NodeID> Graph::getLink(EdgeID linkID) {
+        return linkIDToNodeIDMap[linkID];
+    }
+
     vector<NodeID> Graph::getActiveNodeIDs(string currentGroup) {
         vector<NodeID> activeNodes;
         for (auto entry: nodeIDs[currentGroup])
@@ -174,16 +178,16 @@ namespace sail {
             gvFreeContext(gvc);
         }
 
-        EdgeID edgeID = 0;
-        map<AttributeID, map<AttributeID, EdgeID>> edgeIDMap;
         for (auto edge : getActiveEdges(currentGroup)) {
             AttributeID srcID = outputAttributeIDMap[edge.first];
             AttributeID dstID = inputAttributeIDMap[edge.second];
-            if (edgeIDMap.find(srcID) == edgeIDMap.end())
-                edgeIDMap[srcID];
-            if (edgeIDMap[srcID].find(dstID) == edgeIDMap[srcID].end())
-                edgeIDMap[srcID][dstID] = edgeID++;
-            ImNodes::Link(edgeIDMap[srcID][dstID],
+            pair<AttributeID, AttributeID> attrEdge = make_pair(srcID, dstID);
+            if (attrToLinkIDMap.find(attrEdge) == attrToLinkIDMap.end()) {
+                EdgeID newID = attrToLinkIDMap.size();
+                attrToLinkIDMap[attrEdge] = newID;
+                linkIDToNodeIDMap[newID] = make_pair(edge.first, edge.second);
+            }
+            ImNodes::Link(attrToLinkIDMap[attrEdge],
                     outputAttributeIDMap[edge.first],
                     inputAttributeIDMap[edge.second]);
         }
@@ -209,7 +213,9 @@ namespace sail {
                 auto pos =  ImVec2((pos1.x + pos2.x) / 2.0, (pos1.y + pos2.y) / 2.0);
                 auto editorSize = ImNodes::GetEditorDimensions();
                 ImNodes::EditorContextResetPanning(ImVec2(editorSize.x / 2.0 - pos.x, editorSize.y / 2.0 - pos.y));
-                ImNodes::SelectLink(edgeIDMap[outputAttributeIDMap[currentNodeID1]][inputAttributeIDMap[currentNodeID2]]);
+                ImNodes::SelectLink(attrToLinkIDMap[make_pair(
+                                outputAttributeIDMap[currentNodeID1],
+                                inputAttributeIDMap[currentNodeID2])]);
             }
         }
         ImNodes::MiniMap(0.3f, ImNodesMiniMapLocation_BottomRight);
@@ -366,6 +372,36 @@ namespace sail {
         Event &currentEvent = timeline.getCurrentEvent();
         string currentEventTag = get<1>(currentEvent);
         string currentEventInfo = timeline.getStringAtIndex(get<2>(currentEvent));
+
+        // If any node or edge is being hovered, display the Prev Info at that node/edge
+        int hoveredID;
+        auto currentTimelineIndex = timeline.getTimelineIndex();
+        if (ImNodes::IsNodeHovered(&hoveredID)) {
+            unsigned long long prevNodeIndex = timeline.getPrevEventIndex(
+                    currentTimelineIndex, NODE_INFO, hoveredID);
+            if (prevNodeIndex > currentTimelineIndex) {
+                currentEventTag = "";
+                currentEventInfo = "";
+            } else {
+                Event &prevNodeEvent = timeline.getEventAtIndex(prevNodeIndex);
+                currentEventTag = get<1>(prevNodeEvent);
+                currentEventInfo = timeline.getStringAtIndex(get<2>(prevNodeEvent));
+            }
+        }
+        if (ImNodes::IsLinkHovered(&hoveredID)) {
+            NodeID node1, node2;
+            std::tie (node1, node2) = graph.getLink(hoveredID);
+            unsigned long long prevNodeIndex = timeline.getPrevEventIndex(
+                    currentTimelineIndex, EDGE_INFO, node1, node2);
+            if (prevNodeIndex > currentTimelineIndex) {
+                currentEventTag = "";
+                currentEventInfo = "";
+            } else {
+                Event &prevNodeEvent = timeline.getEventAtIndex(prevNodeIndex);
+                currentEventTag = get<1>(prevNodeEvent);
+                currentEventInfo = timeline.getStringAtIndex(get<2>(prevNodeEvent));
+            }
+        }
 
         if (ImGui::TreeNodeEx("Info view", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth)) {
             ImGui::Text(currentEventTag.c_str());
