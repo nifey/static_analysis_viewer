@@ -267,13 +267,13 @@ namespace sail {
             this->graph.addEdge(headerTokens[1], headerTokens[2]);
         } else if (instruction == ">>nodeinfo") {
             string tag = splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second;
-            timeline.addEvent(NODE_INFO, instructionBody, tag, graph.getNodeID(headerTokens[1]));
+            timeline.addEvent(NODE_INFO, tag, instructionBody, graph.getNodeID(headerTokens[1]));
         } else if (instruction == ">>edgeinfo") {
             string tag = splitOnFirst(splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second, " \t").second;
-            timeline.addEvent(EDGE_INFO, instructionBody, tag, graph.getNodeID(headerTokens[1]), graph.getNodeID(headerTokens[2]));
+            timeline.addEvent(EDGE_INFO, tag, instructionBody, graph.getNodeID(headerTokens[1]), graph.getNodeID(headerTokens[2]));
         } else if (instruction == ">>globalinfo") {
             string tag = splitOnFirst(instructionHeader, " \t").second;
-            timeline.addEvent(EVENT_TYPE::GLOBAL_INFO, instructionBody, tag);
+            timeline.addEvent(EVENT_TYPE::GLOBAL_INFO, tag, instructionBody);
         } else if (instruction == ">>prevnodeinfo") {
             string tag = splitOnFirst(splitOnFirst(instructionHeader, " \t").second, " \t").second;
             NodeID node1 = graph.getNodeID(headerTokens[1]);
