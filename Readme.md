@@ -4,6 +4,7 @@
 
 - A visualization and debugging tool for Static analysis, that can display the analysed code as a sequence of events on a Graph, allowing us to view the intermediate results of the analysis. The viewer uses a simple format to specify the graph and sequence of events, that is agnostic to the programming language, the analysis framework or the Intermediate Representation used.
 - Usage: Generate the trace file from your static analysis by printing at the relevant locations in the analysis. Then load the trace file and view it in the viewer.
+- Example trace files can be found in [examples](./examples) directory.
 - The repository also contains helper libraires that provides loggers to print data into the tracefile (in the viewer format).
     - [DfLogger](./DfLogger) : Logger for Java programming language
     - [CPP_logger](./CPP_logger/TraceWriter.hpp) : Header only library in C++ for LLVM (version 20)
