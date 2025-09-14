@@ -324,8 +324,9 @@ namespace sail {
     float timelinePos = 0.0;
     char regexString[100];
     void Trace::render() {
+        timelinePos = floor(timelinePos);
         if (timelinePos != lastTimelinePos) {
-            timeline.moveToFloatPosition(timelinePos);
+            timeline.setTimelineIndex(timelinePos);
             lastTimelinePos = timelinePos;
         }
 
@@ -342,7 +343,7 @@ namespace sail {
                 ImGui::IsKeyPressed(ImGuiKey_DownArrow, true))
             timeline.moveToCurrentPrevEvent();
 
-        timelinePos = timeline.getFloatPosition();
+        timelinePos = timeline.getTimelineIndex();
 
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->Pos);
@@ -371,7 +372,7 @@ namespace sail {
         if (ImGui::ArrowButton("Right", ImGuiDir_Right))
             timeline.moveToNextEvent();
         ImGui::SameLine();
-        ImGui::SliderFloat("Timeline", &timelinePos, 0.0, 1.0, "", 0);
+        ImGui::SliderFloat("Timeline", &timelinePos, 0.0, timeline.size(), "", 0);
 
         Event &currentEvent = timeline.getCurrentEvent();
         string currentEventTag = get<1>(currentEvent);

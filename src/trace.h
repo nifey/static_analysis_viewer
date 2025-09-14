@@ -68,7 +68,6 @@ namespace sail {
             map<tuple<enum EVENT_TYPE, NodeID, NodeID>, vector<unsigned long long>> eventData;
 
             unsigned long long currentTimelineIndex = 0;
-            float timelineFloatPosition = 0.0;
 
         public:
             void addEvent(EVENT_TYPE type, string tag, string info, NodeID node1, NodeID node2);
@@ -80,17 +79,9 @@ namespace sail {
 
             void setTimelineIndex(unsigned long long index) {
                 currentTimelineIndex = index;
-                timelineFloatPosition = ((float) currentTimelineIndex / eventList.size());
             }
             unsigned long long getTimelineIndex() {
                 return currentTimelineIndex;
-            }
-            void setFloatPosition(float position) {
-                currentTimelineIndex = position * eventList.size();
-                timelineFloatPosition = ((float) currentTimelineIndex / eventList.size());
-            }
-            float getFloatPosition () {
-                return ((float) currentTimelineIndex) / eventList.size();
             }
 
             void moveToNextEvent() {
@@ -157,9 +148,6 @@ namespace sail {
             }
             void moveToCurrentPrevEvent() {
                 setTimelineIndex(getCurrentPrevEventIndex());
-            }
-            void moveToFloatPosition (float timelinePosition) {
-                currentTimelineIndex = timelinePosition * eventList.size();
             }
 
             string getCurrentGroup(Graph &graph) {
