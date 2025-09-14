@@ -414,13 +414,17 @@ namespace sail {
         }
         if (ImGui::TreeNodeEx("Filtered Info view", ImGuiTreeNodeFlags_SpanFullWidth)) {
             ImGui::InputText("Regular Expression", regexString, 99);
-            regex regex(regexString, regex_constants::basic | regex_constants::icase);
-            string stringToDisplay;
-            smatch match;
-            for (string line : splitOn(currentEventInfo, "\n"))
-                if (regex_search(line, match, regex))
-                    stringToDisplay.append(line + "\n");
-            ImGui::Text(stringToDisplay.c_str());
+            try {
+                regex regex(regexString, regex_constants::basic | regex_constants::icase);
+                string stringToDisplay;
+                smatch match;
+                for (string line : splitOn(currentEventInfo, "\n"))
+                    if (regex_search(line, match, regex))
+                        stringToDisplay.append(line + "\n");
+                ImGui::Text(stringToDisplay.c_str());
+            } catch (regex_error e) {
+                ImGui::Text("Incorrect regular expression");
+            }
             ImGui::TreePop();
         }
         ImGui::EndChild();
