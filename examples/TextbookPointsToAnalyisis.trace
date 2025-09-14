@@ -1,0 +1,279 @@
+>>node B0
+b = &y
+p = &a
+c = a
+if c
+>>node B1
+a = b
+b = &z
+>>node B2
+*p = b
+a = &x
+>>node B3
+>>edge B0 B1
+>>edge B0 B2
+>>edge B1 B3
+>>edge B2 B3
+>>edge B3 B0
+>>globalinfo Introduction
+This handwritten tracefile shows the working of a textbook flow-sensitive points-to analysis.
+This tracefile is meant to demostrate how the viewer can also be used for teaching.
+
+Based on an example from Prof.Rupesh Nasre's slides
+(https://www.cse.iitm.ac.in/~rupesh/teaching/pa/jul25/schedule/2.1-pta.pdf)
+>>nodeinfo B0 After b = &y
+a -> {}
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> {}
+>>nodeinfo B0 After p = &a
+a -> {}
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 After c = a
+a -> {}
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 Meet from Predecessors
+a -> {}
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 After a = b
+a -> { y }
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 After b = &z
+a -> { y }
+b -> { z }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 Meet from Predecessors
+a -> {}
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 After *p = b
+a -> { y }
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 After a = &x
+a -> { x }
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B3 Meet from Predecessors
+a -> { x, y }
+b -> { y, z }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 Meet from Predecessors
+a -> { x, y }
+b -> { y, z }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 After b = &y
+a -> { x, y }
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 After p = &a
+a -> { x, y }
+b -> { y }
+c -> {}
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 After c = a
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 Meet from Predecessors
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 After a = b
+a -> { y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 After b = &z
+a -> { y }
+b -> { z }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 Meet from Predecessors
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 After *p = b
+a -> { y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 After a = &x
+a -> { x }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B3 Meet from Predecessors
+a -> { x, y }
+b -> { y, z }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 Meet from Predecessors
+a -> { x, y }
+b -> { y, z }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 After b = &y
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 After p = &a
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B0 After c = a
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 Meet from Predecessors
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 After a = b
+a -> { y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B1 After b = &z
+a -> { y }
+b -> { z }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 Meet from Predecessors
+a -> { x, y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 After *p = b
+a -> { y }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B2 After a = &x
+a -> { x }
+b -> { y }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
+>>nodeinfo B3 Meet from Predecessors
+a -> { x, y }
+b -> { y, z }
+c -> { x, y }
+x -> {}
+y -> {}
+z -> {}
+p -> { a }
