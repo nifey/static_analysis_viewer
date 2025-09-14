@@ -41,6 +41,10 @@ namespace sail {
         auto splitName = splitOnFirst(nodeName, ":");
         string groupName = splitName.first;
         string subNodeName = splitName.second;
+        if (subNodeName == "" && groupName != "") {
+            subNodeName = groupName;
+            groupName = "";
+        }
 
         if (nodeIDs.find(groupName) == nodeIDs.end())
             nodeIDs[groupName];
@@ -75,6 +79,10 @@ namespace sail {
         auto splitName = splitOnFirst(nodeName, ":");
         string groupName = splitName.first;
         string subNodeName = splitName.second;
+        if (subNodeName == "" && groupName != "") {
+            subNodeName = groupName;
+            groupName = "";
+        }
 
         if (nodeIDs.find(groupName) == nodeIDs.end())
             nodeIDs[groupName];
@@ -94,7 +102,13 @@ namespace sail {
 
     string Graph::getNodeGroupName(NodeID nodeID) {
         auto splitName = splitOnFirst(nodeNames[nodeID], ":");
-        return splitName.first;
+        string groupName = splitName.first;
+        string subNodeName = splitName.second;
+        if (subNodeName == "" && groupName != "") {
+            subNodeName = groupName;
+            groupName = "";
+        }
+        return groupName;
     }
 
     string Graph::getNodeContents(NodeID nodeID) {
